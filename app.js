@@ -19,7 +19,6 @@ const io = socketIo(server, {
   cors: {
     origin: "*",
   },
-  path: "/ws",
 });
 
 app.use(cors());
@@ -31,8 +30,21 @@ app.use(bodyParser.urlencoded({ extended: true }));
 io.use(verifySocketToken);
 
 io.on("connection", (socket) => {
-  console.log("A user connected", socket.user);
-
+  console.log("A user connected", socket.store_id);
+  socket.on("detection_status", async (event) => {
+    try {
+      const statusData = {
+        id: socket.store_id,
+        status: event.detected,
+        timestamp: new Date().toISOString(),
+      };
+      console.log(statusData);
+      await firestore.collection("status").add(statusData);
+      console.log("Status added to Firestore:", statusData);
+    } catch (error) {
+      console.error("Error adding status to Firestore:", error);
+    }
+  });
   socket.on("disconnect", () => {
     console.log("User disconnected");
   });
