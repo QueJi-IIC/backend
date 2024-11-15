@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken");
 const verifyToken = require("./middlewares/auth");
 const verifySocketToken = require("./middlewares/socketAuth");
 const { firestore } = require("./utils/firebase-admin");
+const axios = require("axios");
 
 const app = express();
 const port = 5500;
@@ -81,12 +82,10 @@ app.post("/hardware/:store_id", verifyToken, async (req, res) => {
     const docRef = await firestore.collection("hardware").add(hardwareData);
     res.json({ message: "Data added successfully", data: hardwareData });
   } catch (error) {
-    res
-      .status(500)
-      .json({
-        error: "Error adding data to Firestore",
-        details: error.message,
-      });
+    res.status(500).json({
+      error: "Error adding data to Firestore",
+      details: error.message,
+    });
   }
 });
 
