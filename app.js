@@ -34,6 +34,8 @@ app.use(bodyParser.urlencoded({ extended: true }));
 io.use(verifySocketToken);
 io.on("connection", socketHandler);
 
+
+// rest api
 app.get("/", (req, res) => {
   res.json({ message: "Hello World!" });
 });

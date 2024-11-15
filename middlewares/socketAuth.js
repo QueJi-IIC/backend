@@ -1,5 +1,5 @@
 const { Socket } = require("socket.io");
-const { firestore } = require("../utils/firebase-admin");
+const { firestore, firebase } = require("../utils/firebase-admin");
 const jwt = require("jsonwebtoken");
 
 /**
@@ -16,7 +16,20 @@ const verifySocketToken = async (socket, next) => {
 
   if (platform === "web") {
     socket.join("web");    
+    // validate the firebase id token and store the user
+    const idToken = socket.handshake.headers["authorization"];
+    const role = socket.handshake.headers["role"];
+    if (!idToken || !role) {
+      return next(new Error("Please provide the token and role"));
+    }
+    try {
+      const decodedToken = await firebase.auth().verifyIdToken(idToken);
+      socket.user = decodedToken;
+    } catch (error) {
+      return next(new Error("Unauthorized: " + error.message));
+    }
     socket.platform = platform;
+    socket.role = role;
     next();
   } else if (platform === "hardware") {
     socket.join("hardware");
