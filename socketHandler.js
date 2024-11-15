@@ -5,7 +5,7 @@ const { firestore } = require("./utils/firebase-admin");
  * @param {Socket} socket
  */
 const socketHandler = (socket) => {
-  console.log("A user connected", socket.store_id);
+  console.log("A user connected via the", socket.platform);
   socket.on("detection_status", async (event) => {
     try {
       const statusData = {

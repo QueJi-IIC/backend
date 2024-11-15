@@ -9,16 +9,16 @@ const jwt = require("jsonwebtoken");
 const verifySocketToken = async (socket, next) => {
   const clientId = socket.handshake.headers["client-id"];
   const clientSecret = socket.handshake.headers["client-secret"];
-  const deviceType = socket.handshake.headers["platform"];
-  // if (!deviceType) {
-  //   return next(new Error("Device Type is needed"));
-  // }
+  const platform = socket.handshake.headers["platform"];
+  if (!platform) {
+    return next(new Error("Device Type is needed"));
+  }
 
-  if (deviceType === "web") {
+  if (platform === "web") {
     socket.join("web");    
-    socket.deviceType = deviceType;
+    socket.platform = platform;
     next();
-  } else if (deviceType === "hardware") {
+  } else if (platform === "hardware") {
     socket.join("hardware");
     if (!clientId || !clientSecret) {
       return next(new Error("Parameters are needed"));
@@ -45,7 +45,7 @@ const verifySocketToken = async (socket, next) => {
 
       // Attach the store_id to the socket object
       socket.store_id = store_id;
-      socket.deviceType = deviceType;
+      socket.platform = platform;
       next();
     } catch (error) {
       next(new Error("Unauthorized: " + error.message));
