@@ -1,22 +1,25 @@
+const { Socket } = require("socket.io");
 const { firestore } = require("../utils/firebase-admin");
 const jwt = require("jsonwebtoken");
 
+/**
+ * @param {Socket} socket
+ * @param {import("express").NextFunction} next
+ */
 const verifySocketToken = async (socket, next) => {
   const clientId = socket.handshake.headers["client-id"];
   const clientSecret = socket.handshake.headers["client-secret"];
   const deviceType = socket.handshake.headers["platform"];
-
-  if (!deviceType) {
-    return next(new Error("Device Type is needed"));
-  }
+  // if (!deviceType) {
+  //   return next(new Error("Device Type is needed"));
+  // }
 
   if (deviceType === "web") {
-    socket.store_id = "web";
+    socket.join("web");    
     socket.deviceType = deviceType;
     next();
-  }
-
-  if (deviceType === "hardware") {
+  } else if (deviceType === "hardware") {
+    socket.join("hardware");
     if (!clientId || !clientSecret) {
       return next(new Error("Parameters are needed"));
     }
@@ -47,6 +50,8 @@ const verifySocketToken = async (socket, next) => {
     } catch (error) {
       next(new Error("Unauthorized: " + error.message));
     }
+  } else {
+    next();
   }
 };
 

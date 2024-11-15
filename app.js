@@ -9,6 +9,9 @@ const verifyToken = require("./middlewares/auth");
 const verifySocketToken = require("./middlewares/socketAuth");
 const { firestore } = require("./utils/firebase-admin");
 const axios = require("axios");
+const socketHandler = require("./socketHandler");
+
+require("dotenv").config();
 
 const app = express();
 const port = 5500;
@@ -21,40 +24,22 @@ const io = socketIo(server, {
   },
 });
 
+// basic middlewares
 app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// socket
+// socket io
 io.use(verifySocketToken);
-
-io.on("connection", (socket) => {
-  console.log("A user connected", socket.store_id);
-  socket.on("detection_status", async (event) => {
-    try {
-      const statusData = {
-        id: socket.store_id,
-        status: event.detected,
-        timestamp: new Date().toISOString(),
-      };
-      console.log(statusData);
-      await firestore.collection("status").add(statusData);
-      console.log("Status added to Firestore:", statusData);
-    } catch (error) {
-      console.error("Error adding status to Firestore:", error);
-    }
-  });
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-});
-
-const ORS_API_KEY = "5b3ce3597851110001cf62483def44912c544f018818c7750ac93839";
+io.on("connection", socketHandler);
 
 app.get("/", (req, res) => {
   res.json({ message: "Hello World!" });
 });
+
+// mapping api key
+const ORS_API_KEY = process.env.ORS_API_KEY;
 
 app.post("/hardware/:store_id", verifyToken, async (req, res) => {
   try {
